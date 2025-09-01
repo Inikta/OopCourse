@@ -25,7 +25,7 @@ public class Range {
         this.to = to;
     }
 
-    public double getRangeLength() {
+    public double getLength() {
         return to - from;
     }
 
@@ -33,69 +33,50 @@ public class Range {
         return number >= from && number <= to;
     }
 
-    public Range getRangesIntersection(Range anotherRange) {
-        if (anotherRange.to <= this.from || anotherRange.from >= this.to) {
+    public Range getIntersection(Range range) {
+        double intersectionFrom = Math.max(range.from, from);
+        double intersectionTo = Math.min(range.to, to);
+
+        if (intersectionFrom >= intersectionTo) {
             return null;
         }
 
-        double intersectionRangeBegin;
-        double intersectionRangeEnd;
-
-        intersectionRangeBegin = Math.max(anotherRange.from, this.from);
-
-        intersectionRangeEnd = Math.min(anotherRange.to, this.to);
-
-        return new Range(intersectionRangeBegin, intersectionRangeEnd);
+        return new Range(intersectionFrom, intersectionTo);
     }
 
-    public Range[] getRangesUnion(Range anotherRange) {
-        if (anotherRange.to < this.from || anotherRange.from > this.to) {
-            return new Range[]{this, anotherRange};
+    public Range[] getUnion(Range range) {
+        if (range.to < from || range.from > to) {
+            return new Range[]{this, range};
         }
 
-        double unionRangeBegin = 0;
-        double unionRangeEnd = 0;
-
-        if (anotherRange.from <= this.to) {
-            unionRangeBegin = Math.min(anotherRange.from, this.from);
-
-            unionRangeEnd = Math.max(anotherRange.to, this.to);
-        }
-
-        return new Range[]{new Range(unionRangeBegin, unionRangeEnd)};
+        return new Range[]{new Range(Math.min(range.from, from), Math.max(range.to, to))};
     }
 
-    public Range[] getRangesDifference(Range anotherRange) {
-        Range[] difference = new Range[2];
-
-        if (anotherRange.to <= this.from || anotherRange.from >= this.to) {
-            return new Range[0];
+    public Range[] getDifference(Range range) {
+        if (range.from > from && range.to < to) {
+            return new Range[]{new Range(from, range.from), new Range(range.to, to)};
         }
 
-        if (anotherRange.from <= this.from && anotherRange.to >= this.to) {
-            return new Range[0];
+        if (range.from < from && range.to > to) {
+            return new Range[]{new Range(range.from, from), new Range(to, range.to)};
         }
 
-        Range intersection = this.getRangesIntersection(anotherRange);
-
-        if (this.from < intersection.from) {
-            difference[0] = new Range(this.from, intersection.from);
+        if (range.from < from && range.to == to) {
+            return new Range[]{new Range(range.from, from)};
         }
 
-        if (this.to > intersection.to) {
-            int index = 0;
-
-            if (difference[0] != null) {
-                index++;
-            }
-
-            difference[index] = new Range(intersection.to, this.to);
+        if (range.from == from && range.to > to) {
+            return new Range[]{new Range(to, range.to)};
         }
 
-        if (difference[1] == null) {
-            return new Range[]{difference[0]};
-        } else {
-            return difference;
+        if (range.from > from && range.to == to) {
+            return new Range[]{new Range(from, range.from)};
         }
+
+        if (range.from == from && range.to < to) {
+            return new Range[]{new Range(range.to, to)};
+        }
+
+        return new Range[0];
     }
 }
